@@ -21,6 +21,7 @@ import {
     VIEW_SETTINGS,
 } from '../../shared/ipc-commands';
 import { DataService } from './services/data.service';
+import { DatabaseService } from './services/database.service';
 import { EpgService } from './services/epg.service';
 import { PlaylistsService } from './services/playlists.service';
 import { SettingsService } from './services/settings.service';
@@ -65,6 +66,7 @@ export class AppComponent {
 
     constructor(
         private dataService: DataService,
+        private databaseService: DatabaseService,
         private dialog: MatDialog,
         private epgService: EpgService,
         private playlistService: PlaylistsService,
@@ -109,7 +111,16 @@ export class AppComponent {
         }
     }
 
-    ngOnInit() {
+    async ngOnInit() {
+        // Clear Xtream content from database on startup to force fresh fetch
+        if (isTauri()) {
+            try {
+                await this.databaseService.clearAllXtreamContent();
+            } catch (error) {
+                console.error('Failed to clear Xtream content:', error);
+            }
+        }
+
         this.store.dispatch(PlaylistActions.loadPlaylists());
         this.translate.setDefaultLang(this.DEFAULT_LANG);
 
@@ -290,8 +301,7 @@ export class AppComponent {
 
     showErrorAsNotification(response: { message: string; status: number }) {
         this.snackBar.open(
-            `Error: ${response?.message ?? 'Something went wrong'} (Status: ${
-                response?.status ?? 0
+            `Error: ${response?.message ?? 'Something went wrong'} (Status: ${response?.status ?? 0
             })`,
             null,
             { duration: 4000 }

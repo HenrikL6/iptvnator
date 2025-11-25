@@ -427,11 +427,11 @@ export class DatabaseService {
                 const title =
                     type === 'series'
                         ? stream.title ||
-                          stream.name ||
-                          `Unknown Series ${stream.series_id}`
+                        stream.name ||
+                        `Unknown Series ${stream.series_id}`
                         : stream.name ||
-                          stream.title ||
-                          `Unknown Stream ${stream.stream_id}`;
+                        stream.title ||
+                        `Unknown Stream ${stream.stream_id}`;
 
                 return [
                     categoryId,
@@ -480,5 +480,38 @@ export class DatabaseService {
         }
 
         return totalInserted;
+    }
+
+    /**
+     * Clears all Xtream content (categories and content) from the database
+     * This makes the app fetch fresh data from the server on next load
+     */
+    async clearAllXtreamContent(): Promise<void> {
+        const db = await this.getConnection();
+        try {
+            // Delete all content for Xtream playlists (cascade will handle related records)
+            await db.execute(`
+                DELETE FROM content 
+                WHERE category_id IN (
+                    SELECT id FROM categories 
+                    WHERE playlist_id IN (
+                        SELECT id FROM playlists WHERE type = 'xtream'
+                    )
+                )
+            `);
+
+            // Delete all categories for Xtream playlists
+            await db.execute(`
+                DELETE FROM categories 
+                WHERE playlist_id IN (
+                    SELECT id FROM playlists WHERE type = 'xtream'
+                )
+            `);
+
+            console.log('Cleared all Xtream content from database');
+        } catch (error) {
+            console.error('Error clearing Xtream content:', error);
+            throw error;
+        }
     }
 }
