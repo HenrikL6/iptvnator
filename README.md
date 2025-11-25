@@ -19,6 +19,13 @@ The application is a cross-platform, open-source project built with ~~Electron~~
 
 ![IPTVnator: Channels list, player and epg list](./iptv-dark-theme.png)
 
+## Build a release
+npm run tauri build
+
+The windows binary will be in:
+src-tauri/target/release/bundle/msi/
+
+
 ## Features
 
 -   M3u and M3u8 playlist support 📺
